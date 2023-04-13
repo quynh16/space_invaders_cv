@@ -1,16 +1,26 @@
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+import cv2
+import mediapipe as mp
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+def main():
+    camera = cv2.VideoCapture(0)
+    while True:
+        ret, frame = camera.read()
+
+        if not ret:
+            print("Failed to capture video.")
+            break
+
+        cv2.imshow('Camera', frame)
+
+        if cv2.waitKey(1) == ord('q'):
+            break
+        if cv2.getWindowProperty('Camera', cv2.WND_PROP_VISIBLE) < 1:
+            break
+
+    camera.release()
+    cv2.destroyAllWindows()
 
 
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    main()
