@@ -24,10 +24,15 @@ def main():
     hand_detector = HandDetector()
     table = Table()
 
+
     while True:
+        #getting frames from camera
         frame = camera.read()
 
+        #detect hand from given frame and draw landmarks on it
         frame = hand_detector.detect(frame)
+
+        # draw the hockey table
         frame = table.draw(frame)
 
         cv2.imshow('Hand Hockey Game', frame)
