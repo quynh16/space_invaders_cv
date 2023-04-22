@@ -23,6 +23,7 @@ def main():
     camera = Camera()
     hand_detector = HandDetector()
     table = Table()
+    game = Game()
 
 
     while True:
@@ -33,7 +34,7 @@ def main():
         frame = hand_detector.detect(frame)
 
         # draw the hockey table
-        frame = table.draw(frame)
+        frame = table.draw(frame, game)
 
         cv2.imshow('Hand Hockey Game', frame)
 
