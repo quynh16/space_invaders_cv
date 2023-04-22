@@ -26,10 +26,10 @@ def main():
 
 
     while True:
-        #getting frames from camera
+        # get frames from camera
         frame = camera.read()
 
-        #detect hand from given frame and draw landmarks on it
+        # detect hand from given frame and draw landmarks on it
         frame = hand_detector.detect(frame)
 
         # draw the hockey table
