@@ -29,7 +29,13 @@ class Table:
         self.g3 = None
         self.g4 = None
 
-    def draw(self, frame, game):
+    def draw(self, frame, game, results):
+        frame = self.draw_table(frame)
+        frame = self.draw_game_pieces(frame, game, results)
+
+        return frame
+
+    def draw_table(self, frame):
         if not self.initialized:
             self.h, self.w = frame.shape[:2]
             self.center = (int(self.w/2), int(self.h/2))
@@ -58,6 +64,9 @@ class Table:
         # right goal
         frame = cv2.rectangle(frame, self.g3, self.g4, self.color, -1) 
 
+        return frame
+    
+    def draw_game_pieces(self, frame, game, results):
         frame = cv2.circle(frame, tuple(game.puck * np.array([self.w/100, self.h/100], 
                                                                  dtype=int)), 
                            self.puck_size, self.puck_color, thickness=-1)
@@ -69,4 +78,9 @@ class Table:
         frame = cv2.circle(frame, tuple(game.p2 * np.array([self.w/100, self.h/100], 
                                                                  dtype=int)), 
                            self.handle_size, self.handle_color, thickness=-1)
+        
+        if results.multi_hand_landmarks:
+            for hand_landmarks in results.multi_hand_landmarks:
+                print(hand_landmarks.landmark[10])
+
         return frame

@@ -30,11 +30,18 @@ def main():
         # get frames from camera
         frame = camera.read()
 
+        # Draw the hand landmarks on the frame
+        # Convert the BGR image to RGB before processing
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
         # detect hand from given frame and draw landmarks on it
-        frame = hand_detector.detect(frame)
+        results = hand_detector.detect(frame)
+
+        frame.flags.writeable = True
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)        
 
         # draw the hockey table
-        frame = table.draw(frame, game)
+        frame = table.draw(frame, game, results)
 
         cv2.imshow('Hand Hockey Game', frame)
 

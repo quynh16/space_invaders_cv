@@ -18,14 +18,5 @@ class HandDetector:
 
         # Process the frame to detect hand landmarks
         results = self.hands.process(frame)
-
-        # Draw the hand landmarks on the frame
-        frame.flags.writeable = True
-        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-        if results.multi_hand_landmarks:
-            for hand_landmarks in results.multi_hand_landmarks:
-                self.drawing_utils.draw_landmarks(
-                    frame,
-                    hand_landmarks,
-                    mp.solutions.hands.HAND_CONNECTIONS)
-        return frame
+                
+        return results
