@@ -22,7 +22,6 @@ def calculate_hand_position(hand_landmarks, image_width, image_height):
 def main():
     camera = Camera()
     hand_detector = HandDetector()
-    table = Table()
     game = Game()
 
 
@@ -35,13 +34,13 @@ def main():
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         # detect hand from given frame and draw landmarks on it
-        results = hand_detector.detect(frame)
+        frame, results = hand_detector.detect(frame)
 
         frame.flags.writeable = True
-        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)        
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)     
 
         # draw the hockey table
-        frame = table.draw(frame, game, results)
+        frame = game.update(frame, results)
 
         cv2.imshow('Hand Hockey Game', frame)
 
