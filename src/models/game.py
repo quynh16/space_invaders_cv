@@ -99,12 +99,8 @@ class Game:
         frame = cv2.rectangle(frame, (20, frame.shape[0] - 50), (320, frame.shape[0] - 20), RED_RGB, -1)
 
         # Draw the bar
-        if self.health > 0.5:
-            frame = cv2.rectangle(frame, (20, frame.shape[0] - 50), (20 + bar_width, frame.shape[0] - 20), GREEN_RGB,
-                                  -1)
-        else:
-            frame = cv2.rectangle(frame, (20, frame.shape[0] - 50), (20 + bar_width, frame.shape[0] - 20), RED_RGB, -1)
-
+        if self.health > 0:
+            frame = cv2.rectangle(frame, (20, frame.shape[0] - 50), (20 + bar_width, frame.shape[0] - 20), GREEN_RGB, -1)
         return frame
 
     def draw_bullets(self, frame):
