@@ -25,7 +25,6 @@ class HandDetector:
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         if results.multi_hand_landmarks:
             for hand_landmarks in results.multi_hand_landmarks:
-                print(hand_landmarks.landmark[10])
                 self.drawing_utils.draw_landmarks(
                     frame,
                     hand_landmarks,
