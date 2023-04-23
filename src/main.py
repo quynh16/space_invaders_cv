@@ -1,28 +1,48 @@
 import mediapipe as mp
 import cv2
 from models import *
+import threading
+import queue
 
 
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
 
 
-def calculate_hand_position(hand_landmarks, image_width, image_height):
-    # Get the landmarks for the wrist and middle finger tip
-    wrist_landmark = hand_landmarks.landmark[mp_hands.HandLandmark.WRIST]
-    middle_finger_tip_landmark = hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_TIP]
+def detect_hand(hand_detector, input_queue, output_queue, stop_event):
+    while not stop_event.is_set():
+        try:
+            # get a frame from the input queue
+            frame = input_queue.get(timeout=1)
 
-    # Calculate the position of the hand as the center of the wrist and middle finger tip
-    hand_position_x = int((wrist_landmark.x + middle_finger_tip_landmark.x) * 0.5 * image_width)
-    hand_position_y = int((wrist_landmark.y + middle_finger_tip_landmark.y) * 0.5 * image_height)
+            # detect hand gestures in the frame
+            frame, results = hand_detector.detect(frame)
 
-    return (hand_position_x, hand_position_y)
+            # put the updated frame and results into the output queue
+            output_queue.put((frame, results))
+
+        except queue.Empty:
+            pass
+
+    # clear the input queue to release any blocked put calls
+    input_queue = None
 
 
 def main():
     camera = Camera()
     hand_detector = HandDetector()
     game = Game()
+
+    # create stop event flag
+    stop_event = threading.Event()
+
+    # create input and output queues
+    input_queue = queue.Queue()
+    output_queue = queue.Queue()
+
+    # create a thread for hand detection
+    detection_thread = threading.Thread(target=detect_hand, args=(hand_detector, input_queue, output_queue, stop_event))
+    detection_thread.start()
 
 
     while True:
@@ -33,23 +53,31 @@ def main():
         # Convert the BGR image to RGB before processing
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        # detect hand from given frame and draw landmarks on it
-        frame, results = hand_detector.detect(frame)
+        # put the frame into the input queue
+        input_queue.put(frame)
 
-        frame.flags.writeable = True
-        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)     
+        # check if there's an updated frame and results in the output queue
+        if not output_queue.empty():
+            frame, results = output_queue.get()
 
-        # update the game state given hand detection results
-        frame = game.update(frame, results)
+            frame.flags.writeable = True
+            frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
-        cv2.imshow('Hand Hockey Game', frame)
+            # update the game state given hand detection results
+            frame = game.update(frame, results)
+
+        cv2.imshow('Hand Space Invaders', frame)
 
         # Exit events
-        if cv2.waitKey(1) == ord('q') or not camera.is_visible('Hand Hockey Game'):
+        if cv2.waitKey(1) == ord('q') or not camera.is_visible('Hand Space Invaders'):
+            # set the stop event flag to stop the detection_thread
+            stop_event.set()
             break
 
     camera.release()
     cv2.destroyAllWindows()
+    # wait for the detection_thread to finish
+    detection_thread.join()
 
 
 if __name__ == '__main__':
