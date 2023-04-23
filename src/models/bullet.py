@@ -1,13 +1,10 @@
 class Bullet:
     '''Tracks the state of a single bullet.'''
-    def __init__(self, x, speed, alien=False):
+    def __init__(self, x, y, speed, alien=False):
         self.x = x
-        self.y = 1
+        self.y = y
         self.speed = speed
         self.alien = alien
-
-        if alien:
-            self.y = 0
     
     def update(self):
         if self.alien:

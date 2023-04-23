@@ -7,6 +7,10 @@ from .alien import Alien
 
 class Game:
     def __init__(self, player_color=BLUE_RGB, alien_color=RED_RGB, scale=2, height=0.02):
+        '''Space invaders game where player controls the movement with their hand and shoots
+        by retracting their thumb to their palm.
+        '''
+        
         self.initialized = False
         self.w = None # width of window
         self.h = None # height of window
@@ -23,17 +27,19 @@ class Game:
         self.alien_color = alien_color # color of alien sprite
         
         # =============================== Game State Variables ============================= #
+        # all values except "difficulty" are normalized values between 0 and 1, inclusive
         self.pos = 0.5 # position of player's index finger from 0 to 1
         self.thumb = None # position of player's thumb from 0 to 1
         self.trigger = False # whether thumb is in "trigger" state (to shoot)
         self.damage = 0.3 # damage we do
-        self.alien_damage = 0.1 # damage aliens do
+        self.alien_damage = 0.25 # damage aliens do
         self.health = 1
         self.count = 0 # counting frames to maintain game state and difficulty level
         self.difficulty = 100 # number of frames to wait until a new alien is generated
                               # so technically a smaller value == more difficult
+        self.hit = True # used to draw us getting hit
         self.bullets = []
-        self.aliens = [Alien(self.width)]
+        self.aliens = [Alien(self.alien_len)]
 
     def update(self, frame, results):
         '''Processes hand tracking information and use it to draw the current frame.'''
@@ -44,7 +50,7 @@ class Game:
         self.count += 1
         # generate a new alien every "difficulty" number of frames
         if self.count == self.difficulty:
-            self.aliens.append(Alien(self.width))
+            self.aliens.append(Alien(self.alien_len))
             self.count = 0
 
         print("NUMBER OF BULLETS:", len(self.bullets))
@@ -54,20 +60,40 @@ class Game:
     
     def draw(self, frame):
         '''Draws the sprites on the frame (e.g. player, bullets, aliens).'''
-        frame = cv2.rectangle(frame, (int(self.w * (self.pos - self.len / 2)), 
-                                      int(self.h * (1 - self.height))), 
-                                     (int(self.w * (self.pos + self.len / 2)), 
-                                      int(self.h)), self.player_color, thickness=-1)  
         frame = self.draw_bullets(frame)
         frame = self.draw_aliens(frame)
+        frame = self.draw_player(frame)
+        frame = self.draw_stats(frame)
+        return frame
+    
+    def draw_player(self, frame):
+        if self.hit:
+            frame = cv2.rectangle(frame, (int(self.w * (self.pos - self.len / 2)), 
+                                        int(self.h * (1 - self.height))), 
+                                        (int(self.w * (self.pos + self.len / 2)), 
+                                        int(self.h)), DARK_BLUE_RGB, thickness=-1)  
+            self.hit = False
+        else:
+            frame = cv2.rectangle(frame, (int(self.w * (self.pos - self.len / 2)), 
+                                        int(self.h * (1 - self.height))), 
+                                        (int(self.w * (self.pos + self.len / 2)), 
+                                        int(self.h)), self.player_color, thickness=-1)  
+        
+        return frame
+    
+    def draw_stats(self, frame):
+        text = f"HEALTH: {self.health:.1f}"
+        frame = cv2.putText(frame, text, (50,50), cv2.FONT_HERSHEY_SIMPLEX, 
+                   1, BLACK_RGB, 2, cv2.LINE_AA)
         return frame
     
     def draw_bullets(self, frame):
         '''Draw the player's bullets on the frame.'''
         for bullet in self.bullets:
             x, y = bullet.pos()
+            hit = False
             
-            # check if bullet hit any aliens
+            # check if our bullet hit any aliens
             for alien in self.aliens:
                 alien_x = alien.state()[0]
 
@@ -75,16 +101,17 @@ class Game:
                     if (alien.get_hit(self.damage)): # if hit kills alien, remove it from list
                         self.aliens.remove(alien)
 
+                    hit = True
                     if bullet in self.bullets:
                         self.bullets.remove(bullet)
-                    break
                 elif y <= 0 and bullet in self.bullets:
                     self.bullets.remove(bullet) # remove bullet if it goes off screen
 
             # draw bullet
-            frame = cv2.rectangle(frame, (int(x * self.w), int(y * self.h)), 
-                                (int((x+0.01) * self.w), int((y+0.05) * self.h)), 
-                                self.player_color, thickness=-1) 
+            if not hit:
+                frame = cv2.rectangle(frame, (int((x - 0.005) * self.w), int(y * self.h)), 
+                                    (int((x + 0.005) * self.w), int((y+0.05) * self.h)), 
+                                    self.player_color, thickness=-1) 
 
             bullet.update() # update bullet position 
         
@@ -93,13 +120,13 @@ class Game:
     def draw_aliens(self, frame):
         '''Draws the aliens on the current frame.'''
         for alien in self.aliens:
-            x, y, hit = alien.state()
+            x, y, is_hit = alien.state()
 
             # draw alien as a darker red if it just got hit
-            if hit:
+            if is_hit:
                 frame = cv2.circle(frame, (int(x * self.w), int(y * self.h)), 
                                int(self.alien_len * self.w), 
-                               (0,0,0), thickness=-1) 
+                               DARK_RED_RGB, thickness=-1) 
             else:
                 frame = cv2.circle(frame, (int(x * self.w), int(y * self.h)), 
                                 int(self.alien_len * self.w), 
@@ -108,23 +135,36 @@ class Game:
             # draw alien's bullets
             for bullet in alien.bullets:
                 x, y = bullet.pos()
+                hit = False
 
-                if x >= self.pos - self.len/2 and x <= self.pos + self.len/2 and y >= 1:
-                    print("YOU LOST")
-
-                if y >= 1:
+                # check if alien bullets hit us
+                if x >= self.pos - self.len/2 and x <= self.pos + self.len/2 and y >= 1-self.height:
+                    self.get_hit()
+                    alien.bullets.remove(bullet)
+                    hit = True
+                elif y >= 1:
                     alien.bullets.remove(bullet) # remove bullet if off screen
 
-                # draw bullet
-                frame = cv2.rectangle(frame, (int(x * self.w), int(y * self.h)), 
-                                     (int((x+0.01) * self.w), int((y+0.05) * self.h)), 
-                                      self.alien_color, thickness=-1) 
+                # draw bullet if it didn't hit us
+                if not hit:
+                    frame = cv2.rectangle(frame, (int((x - 0.005) * self.w), int(y * self.h)), 
+                                        (int((x + 0.005) * self.w), int((y+0.05) * self.h)), 
+                                        self.alien_color, thickness=-1) 
 
-                bullet.update() # update bullet position 
+                    bullet.update() # update bullet position 
 
             alien.update() # update alien state
     
         return frame
+    
+    def shoot(self):
+        '''Action to take when player shoots.'''
+        print("PLAYER: PEW!")
+        self.bullets.append(Bullet(self.pos, 1, 0.05))
+
+    def get_hit(self):
+        self.health -= self.alien_damage
+        self.hit = True
 
     def process(self, results):
         '''Detect hand position to determine player's position and whether they shot.'''
@@ -151,8 +191,3 @@ class Game:
                     self.pos = 1 - self.len / 2
                 if self.pos < 0 + self.len:
                     self.pos = self.len / 2
-
-    def shoot(self):
-        '''Action to take when player shoots.'''
-        print("PLAYER: PEW!")
-        self.bullets.append(Bullet(self.pos, 0.05))

@@ -39,7 +39,7 @@ def main():
         frame.flags.writeable = True
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)     
 
-        # draw the hockey table
+        # update the game state given hand detection results
         frame = game.update(frame, results)
 
         cv2.imshow('Hand Hockey Game', frame)
