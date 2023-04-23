@@ -1,7 +1,6 @@
 import numpy as np
 import cv2
 from my_utils.colors import *
-import numpy as np
 from .bullet import Bullet
 from .alien import Alien
 
@@ -41,6 +40,7 @@ class Game:
         self.hit = True # used to draw us getting hit
         self.bullets = []
         self.aliens = [Alien(self.alien_len)]
+        self.points = 0
 
     def update(self, frame, results):
         '''Processes hand tracking information and use it to draw the current frame.'''
@@ -91,6 +91,7 @@ class Game:
         return frame
     '''
 
+    # new draw_stats
     def draw_stats(self, frame):
         # Calculate the width of the bar based on the health value
         bar_width = int(self.health * 300)
@@ -101,6 +102,10 @@ class Game:
         # Draw the bar
         if self.health > 0:
             frame = cv2.rectangle(frame, (20, frame.shape[0] - 50), (20 + bar_width, frame.shape[0] - 20), GREEN_RGB, -1)
+
+        text = f"POINTS: {self.points}"
+        frame = cv2.putText(frame, text, (750, frame.shape[0] - 50), cv2.FONT_HERSHEY_SIMPLEX,
+                            1, BLACK_RGB, 2, cv2.LINE_AA)
         return frame
 
     def draw_bullets(self, frame):
@@ -116,6 +121,7 @@ class Game:
                 if y <= 0 and x > alien_x - self.alien_len and x < alien_x + self.alien_len:
                     if (alien.get_hit(self.damage)): # if hit kills alien, remove it from list
                         self.aliens.remove(alien)
+                        self.points +=1 # and increase point by 1
 
                     hit = True
                     if bullet in self.bullets:

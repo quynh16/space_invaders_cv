@@ -24,6 +24,8 @@ class Alien:
         # shoot every "speed" number of frames
         if self.count == self.speed:
             self.shoot()
+            # to save computational time, let assume the aliens will move forward whenever it shoot
+            self.y += 0.1
             self.count = 0
 
         # show aliens getting hit for hit_frames number of frames
