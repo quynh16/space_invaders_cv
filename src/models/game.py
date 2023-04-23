@@ -118,7 +118,7 @@ class Game:
             for alien in self.aliens:
                 alien_x = alien.state()[0]
 
-                if y <= 0 and x > alien_x - self.alien_len and x < alien_x + self.alien_len:
+                if y <= 0 and (alien_x - self.alien_len < x < alien_x + self.alien_len):
                     if (alien.get_hit(self.damage)): # if hit kills alien, remove it from list
                         self.aliens.remove(alien)
                         self.points +=1 # and increase point by 1
