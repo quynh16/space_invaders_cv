@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 from my_utils.colors import *
 import numpy as np
+import random
 
 class Game:
     def __init__(self, color=BLUE_RGB, scale=3, thickness=0.02):
@@ -29,10 +30,20 @@ class Game:
 
         return self.draw(frame)
     
-    def draw_bullets(self):
+    def draw_bullets(self, frame):
         for bullet in self.bullets:
-            frame = cv2.circle(frame, bullet.pos(), 0.01, self.color, thickness=-1)  
-            bullet.update()
+            x, y = bullet.pos()
+            if y < 0:
+                self.bullets.remove(bullet) # remove bullet if off screen
+
+            # draw bullet
+            frame = cv2.rectangle(frame, (int(x * self.w), int(y * self.h)), 
+                                 (int((x+0.01) * self.w), int((y+0.05) * self.h)), 
+                                  self.color, thickness=-1) 
+
+            bullet.update() # update bullet position 
+        
+        return frame
 
     def draw(self, frame):
         frame = cv2.rectangle(frame, (int(self.w * (self.pos - self.len / 2)), 
@@ -40,8 +51,7 @@ class Game:
                                      (int(self.w * (self.pos + self.len / 2)), 
                                       int(self.h)), 
                                           self.color, thickness=-1)  
-        self.draw_bullets()
-        
+        frame = self.draw_bullets(frame)
         return frame
 
     def move(self, results):
@@ -66,16 +76,18 @@ class Game:
                     self.pos = self.len / 2
 
     def shoot(self):
-        print("PEW!")
-        bullet = Bullet(self.pos)
+        print("PLAYER: PEW!")
+        self.bullets.append(Bullet(self.pos, 0.05))
         
 class Bullet:
-    def __init__(self, width):
-        self.width = width
-        self.height = 1
+    def __init__(self, x, speed):
+        self.x = x
+        self.y = 1
+        self.speed = speed
     
     def update(self):
-        self.height -= 0.01
+        self.y -= self.speed
 
     def pos(self):
-        return self.width, self.height
+        return self.x, self.y
+    
