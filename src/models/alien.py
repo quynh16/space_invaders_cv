@@ -3,9 +3,9 @@ from .bullet import Bullet
 
 class Alien:
     '''Tracks the state of a single alien.'''
-    def __init__(self, speed=70, bullet_speed=0.03):
+    def __init__(self, width=0.05, speed=70, bullet_speed=0.03):
         self.health = 1
-        self.x = random.uniform(0, 1)
+        self.x = random.uniform(width, 1-width) # need to account for alien width
         self.y = 0
         self.bullets = []
         self.count = 0 # used to count number of frames passed
