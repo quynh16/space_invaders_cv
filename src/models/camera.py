@@ -2,7 +2,7 @@ import cv2
 
 
 class Camera:
-    def __init__(self, device=0, width=1000, height=600):
+    def __init__(self, device=0, width=1000, height=700):
         self.width = width
         self.height = height
         self.camera = cv2.VideoCapture(device)

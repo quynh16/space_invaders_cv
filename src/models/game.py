@@ -32,7 +32,8 @@ class Game:
         self.thumb = None # position of player's thumb from 0 to 1
         self.trigger = False # whether thumb is in "trigger" state (to shoot)
         self.damage = 0.3 # damage we do
-        self.alien_damage = 0.25 # damage aliens do
+        #self.alien_damage = 0.25 # damage aliens do
+        self.alien_damage = 0.05  # damage aliens do
         self.health = 1
         self.count = 0 # counting frames to maintain game state and difficulty level
         self.difficulty = 100 # number of frames to wait until a new alien is generated
@@ -45,6 +46,7 @@ class Game:
         '''Processes hand tracking information and use it to draw the current frame.'''
         if not self.initialized:
             self.h, self.w = frame.shape[:2]
+            self.h -= 100 # extra space at the bottom for showing game status
             self.initialized = True
 
         self.count += 1
@@ -80,13 +82,31 @@ class Game:
                                         int(self.h)), self.player_color, thickness=-1)  
         
         return frame
-    
+
+    '''
     def draw_stats(self, frame):
         text = f"HEALTH: {self.health:.2f}"
         frame = cv2.putText(frame, text, (40,50), cv2.FONT_HERSHEY_SIMPLEX, 
                    1, BLACK_RGB, 2, cv2.LINE_AA)
         return frame
-    
+    '''
+
+    def draw_stats(self, frame):
+        # Calculate the width of the bar based on the health value
+        bar_width = int(self.health * 300)
+
+        # Draw the background rectangle
+        frame = cv2.rectangle(frame, (20, frame.shape[0] - 50), (320, frame.shape[0] - 20), RED_RGB, -1)
+
+        # Draw the bar
+        if self.health > 0.5:
+            frame = cv2.rectangle(frame, (20, frame.shape[0] - 50), (20 + bar_width, frame.shape[0] - 20), GREEN_RGB,
+                                  -1)
+        else:
+            frame = cv2.rectangle(frame, (20, frame.shape[0] - 50), (20 + bar_width, frame.shape[0] - 20), RED_RGB, -1)
+
+        return frame
+
     def draw_bullets(self, frame):
         '''Draw the player's bullets on the frame.'''
         for bullet in self.bullets:
