@@ -29,6 +29,8 @@ class Game:
         self.bullets = []
         self.aliens = [Alien()]
         self.damage = 0.3 # damage aliens do
+        self.count = 0
+        self.difficulty = 100 # number of frames to wait until a new alien is generated
 
     def update(self, frame, results):
         '''Processes hand tracking information and use it to draw the current frame.'''
@@ -36,7 +38,14 @@ class Game:
             self.h, self.w = frame.shape[:2]
             self.initialized = True
 
-        self.move(results) # process hand tracking and update player position
+        self.count += 1
+        if self.count == self.difficulty:
+            self.aliens.append(Alien())
+            self.count = 0
+
+        print("NUMBER OF BULLETS:", len(self.bullets))
+
+        self.process(results) # process hand tracking and update player position
         return self.draw(frame) # draw sprites on frame
     
     def draw(self, frame):
@@ -62,9 +71,10 @@ class Game:
                     if (alien.get_hit(self.damage)): # if hit kills alien, remove it from list
                         self.aliens.remove(alien)
 
-                    self.bullets.remove(bullet)
-                    continue
-                elif y <= 0:
+                    if bullet in self.bullets:
+                        self.bullets.remove(bullet)
+                    break
+                elif y <= 0 and bullet in self.bullets:
                     self.bullets.remove(bullet) # remove bullet if it goes off screen
 
             # draw bullet
@@ -112,7 +122,7 @@ class Game:
     
         return frame
 
-    def move(self, results):
+    def process(self, results):
         '''Detect hand position to determine player's position and whether they shot.'''
         if results.multi_hand_landmarks:
             for hand_landmarks in results.multi_hand_landmarks:
