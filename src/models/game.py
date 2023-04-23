@@ -10,7 +10,7 @@ class Game:
         '''Space invaders game where player controls the movement with their hand and shoots
         by retracting their thumb to their palm.
         '''
-        
+
         self.initialized = False
         self.w = None # width of window
         self.h = None # height of window
@@ -82,8 +82,8 @@ class Game:
         return frame
     
     def draw_stats(self, frame):
-        text = f"HEALTH: {self.health:.1f}"
-        frame = cv2.putText(frame, text, (50,50), cv2.FONT_HERSHEY_SIMPLEX, 
+        text = f"HEALTH: {self.health:.2f}"
+        frame = cv2.putText(frame, text, (40,50), cv2.FONT_HERSHEY_SIMPLEX, 
                    1, BLACK_RGB, 2, cv2.LINE_AA)
         return frame
     
@@ -187,7 +187,7 @@ class Game:
                 self.pos = (hand_x - 0.5) * self.scale + 0.5
 
                 # don't let player's sprite go off screen
-                if self.pos > 1 - self.len:
+                if self.pos > 1 - self.len / 2:
                     self.pos = 1 - self.len / 2
-                if self.pos < 0 + self.len:
+                if self.pos < 0 + self.len / 2:
                     self.pos = self.len / 2
