@@ -26,11 +26,14 @@ class Game:
         self.pos = 0.5 # position of player's index finger from 0 to 1
         self.thumb = None # position of player's thumb from 0 to 1
         self.trigger = False # whether thumb is in "trigger" state (to shoot)
-        self.bullets = []
-        self.aliens = [Alien()]
-        self.damage = 0.3 # damage aliens do
-        self.count = 0
+        self.damage = 0.3 # damage we do
+        self.alien_damage = 0.1 # damage aliens do
+        self.health = 1
+        self.count = 0 # counting frames to maintain game state and difficulty level
         self.difficulty = 100 # number of frames to wait until a new alien is generated
+                              # so technically a smaller value == more difficult
+        self.bullets = []
+        self.aliens = [Alien(self.width)]
 
     def update(self, frame, results):
         '''Processes hand tracking information and use it to draw the current frame.'''
@@ -39,8 +42,9 @@ class Game:
             self.initialized = True
 
         self.count += 1
+        # generate a new alien every "difficulty" number of frames
         if self.count == self.difficulty:
-            self.aliens.append(Alien())
+            self.aliens.append(Alien(self.width))
             self.count = 0
 
         print("NUMBER OF BULLETS:", len(self.bullets))
