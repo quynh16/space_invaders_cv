@@ -13,7 +13,7 @@ class Alien:
         self.bullet_speed = bullet_speed # how fast the bullet moves
         self.hit = False # whether the alien has just been hit. need this to
                          # draw the alien in a darker color to indicate it was hit
-        self.move_distance = 0.1 # the len of the step aliens move forward
+        self.move_distance = 0.001 # the len of the step aliens move forward
 
     def state(self):
         return self.x, self.y, self.hit
@@ -22,11 +22,13 @@ class Alien:
         # shoot every self.speed frames
         self.count += 1
 
+        # move alien down
+        self.y += self.move_distance
+
         # shoot every "speed" number of frames
         if self.count == self.speed:
             self.shoot()
             # to save computational time, let assume the aliens will move forward whenever it shoot
-            self.y += self.move_distance
             self.count = 0
 
         # show aliens getting hit for hit_frames number of frames
