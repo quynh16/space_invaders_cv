@@ -31,7 +31,6 @@ class Game:
         self.thumb = None # position of player's thumb from 0 to 1
         self.trigger = False # whether thumb is in "trigger" state (to shoot)
         self.damage = 0.3 # damage we do
-        #self.alien_damage = 0.25 # damage aliens do
         self.alien_damage = 0.05  # damage aliens do
         self.health = 1
         self.count = 0 # counting frames to maintain game state and difficulty level
@@ -116,9 +115,10 @@ class Game:
             
             # check if our bullet hit any aliens
             for alien in self.aliens:
-                alien_x = alien.state()[0]
+                alien_x, alien_y = alien.state()[:2]
 
-                if y <= 0 and (alien_x - self.alien_len < x < alien_x + self.alien_len):
+                if alien_y - self.alien_len < y < alien_y + self.alien_len and (
+                      alien_x - self.alien_len < x < alien_x + self.alien_len):
                     if (alien.get_hit(self.damage)): # if hit kills alien, remove it from list
                         self.aliens.remove(alien)
                         self.points +=1 # and increase point by 1
