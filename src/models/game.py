@@ -23,7 +23,7 @@ class Game:
         # ============================= Graphics Configuration ============================= #
         self.len = 0.1 # length of player sprite
         self.height = height # thickness of player's sprite 
-        self.bottom_offset = 0.15
+        self.bottom_offset = 0.1
         self.player_color = player_color # color of player bar and bullets
         self.alien_len = 0.05 # length of alien sprite
         self.alien_color = alien_color # color of alien sprite
@@ -110,14 +110,14 @@ class Game:
         bar_width = int(self.health * 300)
 
         # Draw the background rectangle
-        frame = cv2.rectangle(frame, (20, frame.shape[0] - 50), (320, frame.shape[0] - 20), RED_RGB, -1)
+        frame = cv2.rectangle(frame, (20, self.h - 50), (320, self.h - 20), RED_RGB, -1)
 
         # Draw the bar
         if self.health > 0:
-            frame = cv2.rectangle(frame, (20, frame.shape[0] - 50), (20 + bar_width, frame.shape[0] - 20), GREEN_RGB, -1)
+            frame = cv2.rectangle(frame, (20, self.h - 50), (20 + bar_width, self.h - 20), GREEN_RGB, -1)
 
         text = f"POINTS: {self.points}"
-        frame = cv2.putText(frame, text, (750, frame.shape[0] - 50), cv2.FONT_HERSHEY_SIMPLEX,
+        frame = cv2.putText(frame, text, (770, self.h - 25), cv2.FONT_HERSHEY_SIMPLEX,
                             1, BLACK_RGB, 2, cv2.LINE_AA)
         return frame
 
