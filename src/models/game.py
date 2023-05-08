@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+
 from my_utils.colors import *
 from .bullet import Bullet
 from .alien import Alien
@@ -13,6 +14,7 @@ class Game:
         self.initialized = False
         self.w = None # width of window
         self.h = None # height of window
+        self.game_h = None
 
         # ============================= Gamplay Configuration ============================== #
         self.scale = scale # scale up hand position so it doesn't need to move the 
@@ -21,9 +23,12 @@ class Game:
         # ============================= Graphics Configuration ============================= #
         self.len = 0.1 # length of player sprite
         self.height = height # thickness of player's sprite 
+        self.bottom_offset = 100
         self.player_color = player_color # color of player bar and bullets
         self.alien_len = 0.05 # length of alien sprite
         self.alien_color = alien_color # color of alien sprite
+        self.bullet_w = 0.01
+        self.bullet_h = 0.05
         
         # =============================== Game State Variables ============================= #
         # all values except "difficulty" are normalized values between 0 and 1, inclusive
@@ -38,27 +43,34 @@ class Game:
                               # so technically a smaller value == more difficult
         self.hit = True # used to draw us getting hit
         self.bullets = []
-        self.aliens = [Alien(self.alien_len)]
+        self.aliens = [Alien(self.alien_len)] # initialize game with 1 alien
         self.points = 0
 
     def update(self, frame, results):
         '''Processes hand tracking information and use it to draw the current frame.'''
         if not self.initialized:
             self.h, self.w = frame.shape[:2]
-            self.h -= 100 # extra space at the bottom for showing game status
+            self.game_h = self.h - self.bottom_offset
             self.initialized = True
 
-        self.count += 1
-        # generate a new alien every "difficulty" number of frames
-        if self.count == self.difficulty:
-            self.aliens.append(Alien(self.alien_len))
-            self.count = 0
+        if self.health <= 0:
+            return self.losing_screen()
+        else:
+            self.count += 1
+            # generate a new alien every "difficulty" number of frames
+            if self.count == self.difficulty:
+                self.aliens.append(Alien(self.alien_len))
+                self.count = 0
 
-        print("NUMBER OF BULLETS:", len(self.bullets))
+            print("NUMBER OF BULLETS:", len(self.bullets))
 
-        self.process(results) # process hand tracking and update player position
-        return self.draw(frame) # draw sprites on frame
+            self.process(results) # process hand tracking and update player position
+            return self.draw(frame) # draw sprites on frame
     
+    def losing_screen(self):
+        blank_image = np.zeros((self.h, self.w, 3), np.uint8)
+        return blank_image
+
     def draw(self, frame):
         '''Draws the sprites on the frame (e.g. player, bullets, aliens).'''
         frame = self.draw_bullets(frame)
@@ -70,15 +82,15 @@ class Game:
     def draw_player(self, frame):
         if self.hit:
             frame = cv2.rectangle(frame, (int(self.w * (self.pos - self.len / 2)), 
-                                        int(self.h * (1 - self.height))), 
+                                        int(self.game_h * (1 - self.height))), 
                                         (int(self.w * (self.pos + self.len / 2)), 
-                                        int(self.h)), DARK_BLUE_RGB, thickness=-1)  
+                                        int(self.game_h)), DARK_BLUE_RGB, thickness=-1)  
             self.hit = False
         else:
             frame = cv2.rectangle(frame, (int(self.w * (self.pos - self.len / 2)), 
-                                        int(self.h * (1 - self.height))), 
+                                        int(self.game_h * (1 - self.height))), 
                                         (int(self.w * (self.pos + self.len / 2)), 
-                                        int(self.h)), self.player_color, thickness=-1)  
+                                        int(self.game_h)), self.player_color, thickness=-1)  
         
         return frame
 
@@ -131,9 +143,11 @@ class Game:
 
             # draw bullet
             if not hit:
-                frame = cv2.rectangle(frame, (int((x - 0.005) * self.w), int(y * self.h)), 
-                                    (int((x + 0.005) * self.w), int((y+0.05) * self.h)), 
-                                    self.player_color, thickness=-1) 
+                frame = cv2.rectangle(frame, (int((x - self.bullet_w / 2) * self.w), 
+                                              int((y - self.bullet_h) * self.game_h)), 
+                                             (int((x + self.bullet_w / 2) * self.w), 
+                                              int((y) * self.game_h)), 
+                                              self.player_color, thickness=-1) 
 
             bullet.update() # update bullet position 
         
@@ -146,11 +160,11 @@ class Game:
 
             # draw alien as a darker red if it just got hit
             if is_hit:
-                frame = cv2.circle(frame, (int(x * self.w), int(y * self.h)), 
+                frame = cv2.circle(frame, (int(x * self.w), int(y * self.game_h)), 
                                int(self.alien_len * self.w), 
                                DARK_RED_RGB, thickness=-1) 
             else:
-                frame = cv2.circle(frame, (int(x * self.w), int(y * self.h)), 
+                frame = cv2.circle(frame, (int(x * self.w), int(y * self.game_h)), 
                                 int(self.alien_len * self.w), 
                                 self.alien_color, thickness=-1) 
             
@@ -169,8 +183,8 @@ class Game:
 
                 # draw bullet if it didn't hit us
                 if not hit:
-                    frame = cv2.rectangle(frame, (int((x - 0.005) * self.w), int(y * self.h)), 
-                                        (int((x + 0.005) * self.w), int((y+0.05) * self.h)), 
+                    frame = cv2.rectangle(frame, (int((x - 0.005) * self.w), int(y * self.game_h)), 
+                                        (int((x + 0.005) * self.w), int((y+0.05) * self.game_h)), 
                                         self.alien_color, thickness=-1) 
 
                     bullet.update() # update bullet position 
