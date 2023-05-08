@@ -51,7 +51,7 @@ def main():
 
         # Draw the hand landmarks on the frame
         # Convert the BGR image to RGB before processing
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         # put the frame into the input queue
         input_queue.put(frame)

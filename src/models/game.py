@@ -215,12 +215,12 @@ class Game:
             if is_hit:
                 frame = cv2.circle(frame, (int(x * self.w), 
                                            int((y - self.alien_len) * self.game_h)), 
-                                           int(self.alien_len * self.game_h * 1.2), 
+                                           int(self.alien_len * self.game_h * 1.5), 
                                            DARK_RED_RGB, thickness=-1) 
             else:
                 frame = cv2.circle(frame, (int(x * self.w), 
                                            int((y - self.alien_len) * self.game_h)), 
-                                           int(self.alien_len * self.game_h * 1.2), 
+                                           int(self.alien_len * self.game_h * 1.5), 
                                            self.alien_color, thickness=-1) 
             
             # draw alien's bullets
