@@ -50,8 +50,10 @@ class Game:
         '''Processes hand tracking information and use it to draw the current frame.'''
         if not self.initialized:
             self.h, self.w = frame.shape[:2]
-            self.game_h = self.h * (1 - self.bottom_offset)
+            self.game_h = int(self.h * (1 - self.bottom_offset))
             self.initialized = True
+
+        frame = cv2.line(frame, (0, self.game_h), (self.w, self.game_h), self.player_color, thickness=1)
 
         if self.health <= 0:
             return self.losing_screen()
@@ -184,15 +186,16 @@ class Game:
                     self.get_hit()
                     alien.bullets.remove(bullet)
                     hit = True
-                elif y > 1:
+                elif y - self.bullet_h >= 1:
                     alien.bullets.remove(bullet) # remove bullet if off screen
 
                 # draw bullet if it didn't hit us
-                if not hit:
+                if not hit and y - self.bullet_h < 1:
+                    end = y if y < 1 else 1
                     frame = cv2.rectangle(frame, (int((x - self.bullet_w / 2) * self.w), 
                                                   int((y - self.bullet_h) * self.game_h)), 
                                                  (int((x + self.bullet_w / 2) * self.w), 
-                                                  int((y) * self.game_h)), 
+                                                  int((end) * self.game_h)), 
                                                   self.alien_color, thickness=-1) 
 
                     bullet.update() # update bullet position 
