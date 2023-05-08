@@ -158,19 +158,21 @@ class Game:
         for alien in self.aliens:
             x, y, is_hit = alien.state()
 
-            if y >= 1 - self.alien_len:
+            if y >= 1:
                 self.aliens.remove(alien)
                 continue
 
             # draw alien as a darker red if it just got hit
             if is_hit:
-                frame = cv2.circle(frame, (int(x * self.w), int(y * self.game_h)), 
-                               int(self.alien_len * self.w), 
-                               DARK_RED_RGB, thickness=-1) 
+                frame = cv2.circle(frame, (int(x * self.w), 
+                                           int((y - self.alien_len) * self.game_h)), 
+                                           int(self.alien_len * self.game_h), 
+                                           DARK_RED_RGB, thickness=-1) 
             else:
-                frame = cv2.circle(frame, (int(x * self.w), int(y * self.game_h)), 
-                                int(self.alien_len * self.w), 
-                                self.alien_color, thickness=-1) 
+                frame = cv2.circle(frame, (int(x * self.w), 
+                                           int((y - self.alien_len) * self.game_h)), 
+                                           int(self.alien_len * self.game_h), 
+                                           self.alien_color, thickness=-1) 
             
             # draw alien's bullets
             for bullet in alien.bullets:
@@ -182,7 +184,7 @@ class Game:
                     self.get_hit()
                     alien.bullets.remove(bullet)
                     hit = True
-                elif y >= 1:
+                elif y > 1:
                     alien.bullets.remove(bullet) # remove bullet if off screen
 
                 # draw bullet if it didn't hit us
