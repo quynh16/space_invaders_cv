@@ -56,7 +56,13 @@ class Game:
 
         frame = cv2.line(frame, (0, self.game_h), (self.w, self.game_h), self.player_color, thickness=1)
 
-        if self.health <= 0:
+        if not self.in_game:
+            if self.process_restart(results):
+                self.restart_game()
+                return self.draw(frame) # draw sprites on frame
+            else:
+                return self.losing_screen()
+        elif self.health <= 0:
             return self.losing_screen()
         else:
             self.count += 1
@@ -65,14 +71,12 @@ class Game:
                 self.aliens.append(Alien(self.alien_len))
                 self.count = 0
 
-            print("NUMBER OF BULLETS:", len(self.bullets))
-
             self.process(results) # process hand tracking and update player position
             return self.draw(frame) # draw sprites on frame
         
     def restart_game(self):
+        print("Restarting game.")
         self.in_game = True
-        # all values except "difficulty" are normalized values between 0 and 1, inclusive
         self.trigger = False # whether thumb is in "trigger" state (to shoot)
         self.health = 1
         self.count = 0 # counting frames to maintain game state and difficulty level
@@ -88,10 +92,10 @@ class Game:
 
         # setup text
         font = cv2.FONT_HERSHEY_SIMPLEX
-        text = "YOU LOST"
+        text = "GAME OVER"
 
         # get boundary of this text
-        textsize = cv2.getTextSize(text, font, 1, 2)[0]
+        textsize = cv2.getTextSize(text, font, 4, 4)[0]
 
         # get coords based on boundary
         textX = int((self.w - textsize[0]) / 2)
@@ -99,7 +103,17 @@ class Game:
 
         # add text centered on image
         blank_image = np.zeros((self.h, self.w, 3), np.uint8)
-        cv2.putText(blank_image, text, (textX, textY), font, 1, (255, 255, 255), 2)
+        blank_image = cv2.putText(blank_image, text, (textX, textY), font, 4, WHITE_RGB, 4)
+
+        # add a second line of text
+        text = "PUT UP YOUR INDEX FINGER TO RESTART"
+
+        # get coords based on boundary
+        textX = int((self.w - cv2.getTextSize(text, font, 0.5, 2)[0][0]) / 2)
+        textY = int(self.h * 0.8)
+
+        # add text centered on image
+        blank_image = cv2.putText(blank_image, text, (textX, textY), font, 0.5, WHITE_RGB, 2)
 
         return blank_image
 
@@ -246,22 +260,54 @@ class Game:
         self.health -= self.alien_damage
         self.hit = True
 
+    def process_restart(self, results):
+        restart = False
+        if results.multi_hand_landmarks:
+            handedness = results.multi_handedness[0].classification[0].label
+            for hand_landmarks in results.multi_hand_landmarks:
+                landmarks = hand_landmarks.landmark
+                restart = bool(landmarks[8].y < landmarks[6].y)
+                if handedness == 'Right':
+                    restart = restart and landmarks[4].x > landmarks[3].x   #Right Thumb
+                else:
+                    restart = restart and landmarks[4].x < landmarks[3].x   #Left Thumb
+                restart = restart and landmarks[12].y > landmarks[10].y    #Middle finger
+                restart = restart and landmarks[16].y > landmarks[14].y     #Ring finger
+                restart = restart and landmarks[20].y > landmarks[18].y     #Little finger
+
+                if restart:
+                    print("Processing restart!")
+                    return True
+                    
+        return restart
+
     def process(self, results):
         '''Detect hand position to determine player's position and whether they shot.'''
         if results.multi_hand_landmarks:
+            handedness = results.multi_handedness[0].classification[0].label
             for hand_landmarks in results.multi_hand_landmarks:
                 hand_x = hand_landmarks.landmark[8].x
-                self.thumb = hand_landmarks.landmark[4].x
 
                 # detect thumb closed, don't shoot until release
+                self.thumb = hand_landmarks.landmark[4].x
                 self.thumb_thresh = hand_landmarks.landmark[5].x
-                if self.thumb > self.thumb_thresh:
-                    self.trigger = True
-                
-                # shoot upon thumb release
-                if self.trigger and self.thumb < self.thumb_thresh:
-                    self.shoot()
-                    self.trigger = False
+
+                if handedness == 'Right':
+                    if self.thumb > self.thumb_thresh:
+                        self.trigger = True
+
+                    # shoot upon thumb release
+                    if self.trigger and self.thumb < self.thumb_thresh:
+                        self.shoot()
+                        self.trigger = False
+                else:
+                    if self.thumb < self.thumb_thresh:
+                        self.trigger = True
+
+                    # shoot upon thumb release
+                    if self.trigger and self.thumb > self.thumb_thresh:
+                        self.shoot()
+                        self.trigger = False
 
                 # update player position
                 self.pos = (hand_x - 0.5) * self.scale + 0.5
