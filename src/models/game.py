@@ -41,10 +41,11 @@ class Game:
         self.count = 0 # counting frames to maintain game state and difficulty level
         self.difficulty = 100 # number of frames to wait until a new alien is generated
                               # so technically a smaller value == more difficult
-        self.hit = True # used to draw us getting hit
+        self.hit = False # used to draw us getting hit
         self.bullets = []
         self.aliens = [Alien(self.alien_len)] # initialize game with 1 alien
         self.points = 0
+        self.in_game = True
 
     def update(self, frame, results):
         '''Processes hand tracking information and use it to draw the current frame.'''
@@ -68,17 +69,50 @@ class Game:
 
             self.process(results) # process hand tracking and update player position
             return self.draw(frame) # draw sprites on frame
+        
+    def restart_game(self):
+        self.in_game = True
+        # all values except "difficulty" are normalized values between 0 and 1, inclusive
+        self.trigger = False # whether thumb is in "trigger" state (to shoot)
+        self.health = 1
+        self.count = 0 # counting frames to maintain game state and difficulty level
+        self.difficulty = 100 # number of frames to wait until a new alien is generated
+                              # so technically a smaller value == more difficult
+        self.hit = False # used to draw us getting hit
+        self.bullets = []
+        self.aliens = [Alien(self.alien_len)] # initialize game with 1 alien
+        self.points = 0
     
     def losing_screen(self):
+        self.in_game = False
+
+        # setup text
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        text = "YOU LOST"
+
+        # get boundary of this text
+        textsize = cv2.getTextSize(text, font, 1, 2)[0]
+
+        # get coords based on boundary
+        textX = int((self.w - textsize[0]) / 2)
+        textY = int((self.h + textsize[1]) / 2)
+
+        # add text centered on image
         blank_image = np.zeros((self.h, self.w, 3), np.uint8)
+        cv2.putText(blank_image, text, (textX, textY), font, 1, (255, 255, 255), 2)
+
         return blank_image
 
     def draw(self, frame):
         '''Draws the sprites on the frame (e.g. player, bullets, aliens).'''
         frame = self.draw_bullets(frame)
         frame = self.draw_aliens(frame)
-        frame = self.draw_player(frame)
-        frame = self.draw_stats(frame)
+
+        # check if player hasn't lost due to alien reaching edge
+        if self.in_game:
+          frame = self.draw_player(frame)
+          frame = self.draw_stats(frame)
+
         return frame
     
     def draw_player(self, frame):
@@ -161,19 +195,18 @@ class Game:
             x, y, is_hit = alien.state()
 
             if y >= 1:
-                self.aliens.remove(alien)
-                continue
+                return self.losing_screen()
 
             # draw alien as a darker red if it just got hit
             if is_hit:
                 frame = cv2.circle(frame, (int(x * self.w), 
                                            int((y - self.alien_len) * self.game_h)), 
-                                           int(self.alien_len * self.game_h), 
+                                           int(self.alien_len * self.game_h * 1.2), 
                                            DARK_RED_RGB, thickness=-1) 
             else:
                 frame = cv2.circle(frame, (int(x * self.w), 
                                            int((y - self.alien_len) * self.game_h)), 
-                                           int(self.alien_len * self.game_h), 
+                                           int(self.alien_len * self.game_h * 1.2), 
                                            self.alien_color, thickness=-1) 
             
             # draw alien's bullets
