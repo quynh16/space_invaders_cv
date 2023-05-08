@@ -23,7 +23,7 @@ class Game:
         # ============================= Graphics Configuration ============================= #
         self.len = 0.1 # length of player sprite
         self.height = height # thickness of player's sprite 
-        self.bottom_offset = 100
+        self.bottom_offset = 0.15
         self.player_color = player_color # color of player bar and bullets
         self.alien_len = 0.05 # length of alien sprite
         self.alien_color = alien_color # color of alien sprite
@@ -50,7 +50,7 @@ class Game:
         '''Processes hand tracking information and use it to draw the current frame.'''
         if not self.initialized:
             self.h, self.w = frame.shape[:2]
-            self.game_h = self.h - self.bottom_offset
+            self.game_h = self.h * (1 - self.bottom_offset)
             self.initialized = True
 
         if self.health <= 0:
