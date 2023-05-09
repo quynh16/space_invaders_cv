@@ -275,8 +275,10 @@ class Game:
     def process(self, results):
         '''Detect hand position to determine player's position and whether they shot.'''
         if results.multi_hand_landmarks:
-            handedness = results.multi_handedness[0].classification[0].label
-            for hand_landmarks in results.multi_hand_landmarks:
+            handedness_list = results.multi_handedness
+            for idx, hand_landmarks in enumerate(results.multi_hand_landmarks):
+                handedness = handedness_list[idx].classification[0].label
+                print(handedness)
                 hand_x = hand_landmarks.landmark[8].x
 
                 # detect thumb closed, don't shoot until release
@@ -291,20 +293,23 @@ class Game:
                     if self.trigger and self.thumb < self.thumb_thresh:
                         self.shoot()
                         self.trigger = False
+
+                    # update player position
+                    self.pos = (hand_x - 0.5) * self.scale + 0.5
+
+                    # don't let player's sprite go off screen
+                    if self.pos > 1 - self.len / 2:
+                        self.pos = 1 - self.len / 2
+                    if self.pos < 0 + self.len / 2:
+                        self.pos = self.len / 2
                 else:
-                    if self.thumb < self.thumb_thresh:
-                        self.trigger = True
+                    print("Not Right")
+                    # if self.thumb < self.thumb_thresh:
+                    #     self.trigger = True
 
-                    # shoot upon thumb release
-                    if self.trigger and self.thumb > self.thumb_thresh:
-                        self.shoot()
-                        self.trigger = False
+                    # # shoot upon thumb release
+                    # if self.trigger and self.thumb > self.thumb_thresh:
+                    #     self.shoot()
+                    #     self.trigger = False
 
-                # update player position
-                self.pos = (hand_x - 0.5) * self.scale + 0.5
-
-                # don't let player's sprite go off screen
-                if self.pos > 1 - self.len / 2:
-                    self.pos = 1 - self.len / 2
-                if self.pos < 0 + self.len / 2:
-                    self.pos = self.len / 2
+                
