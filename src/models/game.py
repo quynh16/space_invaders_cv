@@ -144,21 +144,12 @@ class Game:
         
         return frame
 
-    '''
-    def draw_stats(self, frame):
-        text = f"HEALTH: {self.health:.2f}"
-        frame = cv2.putText(frame, text, (40,50), cv2.FONT_HERSHEY_SIMPLEX, 
-                   1, BLACK_RGB, 2, cv2.LINE_AA)
-        return frame
-    '''
-
-    # new draw_stats
     def draw_stats(self, frame):
         # Calculate the width of the bar based on the health value
         bar_width = int(self.health * 300)
 
         # Draw the background rectangle
-        frame = cv2.rectangle(frame, (20, self.h - 50), (320, self.h - 20), RED_RGB, -1)
+        frame = cv2.rectangle(frame, (20 + bar_width, self.h - 50), (320, self.h - 20), RED_RGB, -1)
 
         # Draw the bar
         if self.health > 0:
