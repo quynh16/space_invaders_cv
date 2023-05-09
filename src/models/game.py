@@ -67,10 +67,10 @@ class Game:
         else:
             self.count += 1
 
-            print("Generating every:", int(90 / (1.1 ** self.difficulty)))
+            print("Generating every:", int(90 / (1.5 ** self.difficulty)))
 
             # generate a new alien every "difficulty" number of frames
-            if self.count >= int(90 / (1.1 ** self.difficulty)):
+            if self.count >= int(90 / (1.5 ** self.difficulty)):
                 self.aliens.append(Alien(self.alien_len))
                 self.count = 0
 
@@ -102,11 +102,21 @@ class Game:
 
         # get coords based on boundary
         textX = int((self.w - textsize[0]) / 2)
-        textY = int((self.h + textsize[1]) / 2)
+        textY = int((self.h + textsize[1]) / 2.2)
 
         # add text centered on image
         blank_image = np.zeros((self.h, self.w, 3), np.uint8)
         blank_image = cv2.putText(blank_image, text, (textX, textY), font, 4, WHITE_RGB, 4)
+
+        # add a second line of text
+        text = f"LEVEL: {self.difficulty + 1}"
+
+        # get coords based on boundary
+        textX = int((self.w - cv2.getTextSize(text, font, 0.8, 2)[0][0]) / 2)
+        textY = int(self.h * 0.6)
+
+        # add text centered on image
+        blank_image = cv2.putText(blank_image, text, (textX, textY), font, 0.8, WHITE_RGB, 2)
 
         # add a second line of text
         text = "PUT UP YOUR INDEX FINGER TO RESTART"
@@ -158,6 +168,10 @@ class Game:
         if self.health > 0:
             frame = cv2.rectangle(frame, (20, self.h - 50), (20 + bar_width, self.h - 20), GREEN_RGB, -1)
 
+        text = f"LEVEL: {self.difficulty + 1}"
+        frame = cv2.putText(frame, text, (int(self.w / 2.2), self.h - 25), cv2.FONT_HERSHEY_SIMPLEX,
+                            1, BLACK_RGB, 2, cv2.LINE_AA)
+        
         text = f"POINTS: {self.points}"
         frame = cv2.putText(frame, text, (770, self.h - 25), cv2.FONT_HERSHEY_SIMPLEX,
                             1, BLACK_RGB, 2, cv2.LINE_AA)
@@ -180,7 +194,7 @@ class Game:
                         self.points +=1 # and increase point by 1
 
                         if self.points == self.points_goal:
-                            self.points_goal = int(self.points_goal * 1.5)
+                            self.points_goal = int(self.points_goal * 2)
                             self.difficulty += 1
 
                     hit = True
@@ -307,11 +321,11 @@ class Game:
                     dist = ((thumb_x - index_x) ** 2 + (thumb_y - index_y) ** 2) ** 0.5
 
                     # detect pinching motion
-                    if dist < rel_dist * 0.9:
+                    if dist < rel_dist * 0.8:
                         self.trigger = True
 
                     # shoot upon release
-                    if self.trigger and dist > rel_dist * 1.1:
+                    if self.trigger and dist >= rel_dist * 0.9:
                         self.shoot()
                         self.trigger = False
 
