@@ -284,7 +284,7 @@ class Game:
                     hand_x = hand_landmarks.landmark[8].x
 
                     # update player position
-                    self.pos = (hand_x - 0.5) * self.scale + 0.5
+                    self.pos = (hand_x - 0.9) * self.scale + 0.9
 
                     # don't let player's sprite go off screen
                     if self.pos > 1 - self.len / 2:
@@ -297,13 +297,16 @@ class Game:
                     index_y = hand_landmarks.landmark[8].y
                     thumb_x = hand_landmarks.landmark[4].x
                     thumb_y = hand_landmarks.landmark[4].y
+                    thumb_ref_x = hand_landmarks.landmark[3].x
+                    thumb_ref_y = hand_landmarks.landmark[3].y
+                    rel_dist = ((thumb_x - thumb_ref_x) ** 2 + (thumb_y - thumb_ref_y) ** 2) ** 0.5
                     dist = ((thumb_x - index_x) ** 2 + (thumb_y - index_y) ** 2) ** 0.5
 
-                    if dist < 0.04:
+                    if dist < rel_dist * 0.9:
                         self.trigger = True
 
                     # shoot upon thumb release
-                    if self.trigger and dist > 0.06:
+                    if self.trigger and dist > rel_dist * 0.9:
                         self.shoot()
                         self.trigger = False
                     # if self.thumb < self.thumb_thresh:

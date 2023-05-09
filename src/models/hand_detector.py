@@ -3,7 +3,7 @@ import mediapipe as mp
 
 
 class HandDetector:
-    def __init__(self, min_detection_confidence=0.7, min_tracking_confidence=0.7):
+    def __init__(self, min_detection_confidence=0.5, min_tracking_confidence=0.7):
         self.hands = mp.solutions.hands.Hands(
             static_image_mode=False,
             max_num_hands=2,
