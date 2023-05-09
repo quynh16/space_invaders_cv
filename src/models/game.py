@@ -33,18 +33,18 @@ class Game:
         # =============================== Game State Variables ============================= #
         # all values except "difficulty" are normalized values between 0 and 1, inclusive
         self.pos = 0.5 # position of player's index finger from 0 to 1
-        self.thumb = None # position of player's thumb from 0 to 1
         self.trigger = False # whether thumb is in "trigger" state (to shoot)
         self.damage = 0.3 # damage we do
         self.alien_damage = 0.05  # damage aliens do
         self.health = 1
         self.count = 0 # counting frames to maintain game state and difficulty level
-        self.difficulty = 100 # number of frames to wait until a new alien is generated
+        self.difficulty = 0 # number of frames to wait until a new alien is generated
                               # so technically a smaller value == more difficult
         self.hit = False # used to draw us getting hit
         self.bullets = []
         self.aliens = [Alien(self.alien_len)] # initialize game with 1 alien
         self.points = 0
+        self.points_goal = 5
         self.in_game = True
 
     def update(self, frame, results):
@@ -66,8 +66,11 @@ class Game:
             return self.losing_screen()
         else:
             self.count += 1
+
+            print("Generating every:", int(90 / (1.1 ** self.difficulty)))
+
             # generate a new alien every "difficulty" number of frames
-            if self.count == self.difficulty:
+            if self.count >= int(90 / (1.1 ** self.difficulty)):
                 self.aliens.append(Alien(self.alien_len))
                 self.count = 0
 
@@ -80,7 +83,7 @@ class Game:
         self.trigger = False # whether thumb is in "trigger" state (to shoot)
         self.health = 1
         self.count = 0 # counting frames to maintain game state and difficulty level
-        self.difficulty = 100 # number of frames to wait until a new alien is generated
+        self.difficulty = 0 # number of frames to wait until a new alien is generated
                               # so technically a smaller value == more difficult
         self.hit = False # used to draw us getting hit
         self.bullets = []
@@ -176,6 +179,10 @@ class Game:
                         self.aliens.remove(alien)
                         self.points +=1 # and increase point by 1
 
+                        if self.points == self.points_goal:
+                            self.points_goal = int(self.points_goal * 1.5)
+                            self.difficulty += 1
+
                     hit = True
                     if bullet in self.bullets:
                         self.bullets.remove(bullet)
@@ -244,7 +251,6 @@ class Game:
     
     def shoot(self):
         '''Action to take when player shoots.'''
-        print("PLAYER: PEW!")
         self.bullets.append(Bullet(self.pos, 1, 0.05))
 
     def get_hit(self):
@@ -278,7 +284,6 @@ class Game:
             handedness_list = results.multi_handedness
             for idx, hand_landmarks in enumerate(results.multi_hand_landmarks):
                 handedness = handedness_list[idx].classification[0].label
-                print(handedness)
 
                 if handedness == 'Right':
                     hand_x = hand_landmarks.landmark[8].x
@@ -292,7 +297,6 @@ class Game:
                     if self.pos < 0 + self.len / 2:
                         self.pos = self.len / 2
                 else:
-                    # detect thumb closed, don't shoot until release
                     index_x = hand_landmarks.landmark[8].x
                     index_y = hand_landmarks.landmark[8].y
                     thumb_x = hand_landmarks.landmark[4].x
@@ -302,19 +306,13 @@ class Game:
                     rel_dist = ((thumb_x - thumb_ref_x) ** 2 + (thumb_y - thumb_ref_y) ** 2) ** 0.5
                     dist = ((thumb_x - index_x) ** 2 + (thumb_y - index_y) ** 2) ** 0.5
 
+                    # detect pinching motion
                     if dist < rel_dist * 0.9:
                         self.trigger = True
 
-                    # shoot upon thumb release
-                    if self.trigger and dist > rel_dist * 0.9:
+                    # shoot upon release
+                    if self.trigger and dist > rel_dist * 1.1:
                         self.shoot()
                         self.trigger = False
-                    # if self.thumb < self.thumb_thresh:
-                    #     self.trigger = True
-
-                    # # shoot upon thumb release
-                    # if self.trigger and self.thumb > self.thumb_thresh:
-                    #     self.shoot()
-                    #     self.trigger = False
 
                 
