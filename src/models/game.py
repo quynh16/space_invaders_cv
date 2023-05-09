@@ -279,20 +279,9 @@ class Game:
             for idx, hand_landmarks in enumerate(results.multi_hand_landmarks):
                 handedness = handedness_list[idx].classification[0].label
                 print(handedness)
-                hand_x = hand_landmarks.landmark[8].x
-
-                # detect thumb closed, don't shoot until release
-                self.thumb = hand_landmarks.landmark[4].x
-                self.thumb_thresh = hand_landmarks.landmark[5].x
 
                 if handedness == 'Right':
-                    if self.thumb > self.thumb_thresh:
-                        self.trigger = True
-
-                    # shoot upon thumb release
-                    if self.trigger and self.thumb < self.thumb_thresh:
-                        self.shoot()
-                        self.trigger = False
+                    hand_x = hand_landmarks.landmark[8].x
 
                     # update player position
                     self.pos = (hand_x - 0.5) * self.scale + 0.5
@@ -303,7 +292,20 @@ class Game:
                     if self.pos < 0 + self.len / 2:
                         self.pos = self.len / 2
                 else:
-                    print("Not Right")
+                    # detect thumb closed, don't shoot until release
+                    index_x = hand_landmarks.landmark[8].x
+                    index_y = hand_landmarks.landmark[8].y
+                    thumb_x = hand_landmarks.landmark[4].x
+                    thumb_y = hand_landmarks.landmark[4].y
+                    dist = ((thumb_x - index_x) ** 2 + (thumb_y - index_y) ** 2) ** 0.5
+
+                    if dist < 0.04:
+                        self.trigger = True
+
+                    # shoot upon thumb release
+                    if self.trigger and dist > 0.06:
+                        self.shoot()
+                        self.trigger = False
                     # if self.thumb < self.thumb_thresh:
                     #     self.trigger = True
 
