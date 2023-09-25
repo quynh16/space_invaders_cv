@@ -2,7 +2,7 @@
 
 This Python application is a simple implementation of the classic game Space Invaders, except it is played using only hand gestures.
 
-[Demo of game play](./demo_short.gif)
+![Demo of game play](./demo_short.gif)
 
 # Setup
 
