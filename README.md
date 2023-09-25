@@ -7,8 +7,8 @@ This Python application is a simple implementation of the classic game Space Inv
 # Setup
 
 ### Dependencies
-[Python 3](https://www.python.org/downloads/)
-[pipenv](https://pipenv.pypa.io/en/latest/installation/)
+- [Python 3](https://www.python.org/downloads/)
+- [pipenv](https://pipenv.pypa.io/en/latest/installation/)
 
 ### Install
 Clone this repository. Then from inside the repository, run:
@@ -34,8 +34,8 @@ The game is played with both hands. To ensure a smooth experience, try to keep b
 
 ### Moving
 
-To move, move your `right hand` left and right.
+To move, move your **right hand** left and right.
 
 ### Shooting
 
-To shoot, pinch your `left hand`'s index and thumb together. Ensure your left hand is fully open when not shooting to allow the program to more easily detect and track your hand.
+To shoot, pinch your **left hand's** index and thumb together. Ensure your left hand is fully open when not shooting to allow the program to more easily detect and track your hand.
